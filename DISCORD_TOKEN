@@ -1,0 +1,856 @@
+const {
+    Client,
+    GatewayIntentBits,
+    Partials,
+    PermissionsBitField,
+    ChannelType,
+    ActionRowBuilder,
+    StringSelectMenuBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    EmbedBuilder,
+    AttachmentBuilder,
+    REST,
+    Routes,
+    SlashCommandBuilder
+} = require("discord.js");
+
+const fs = require("fs");
+const path = require("path");
+
+// =====================================
+// BARAKAT COMMUNITY - CONFIG
+// =====================================
+
+const TOKEN = process.env.DISCORD_TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+const GUILD_ID = process.env.GUILD_ID;
+
+const BOT_NAME = "BARAKAT COMMUNITY";
+
+// القوانين
+const RULES_CHANNEL_ID = "1525642864640528435";
+
+// تشانل التذاكر
+const TICKET_CHANNEL_ID = "1553140280742510622";
+
+// رول الإدارة
+const STAFF_ROLE_ID = "1556821008927948810";
+
+// كاتيجوري التذاكر
+const TICKET_CATEGORY_ID = "1553139841007620267";
+
+// =====================================
+// IMAGES
+// =====================================
+
+const rulesImagePath = path.join(
+    __dirname,
+    "assets",
+    "rules.png"
+);
+
+const ticketImagePath = path.join(
+    __dirname,
+    "assets",
+    "ticket.png"
+);
+
+// =====================================
+// DISCORD CLIENT
+// =====================================
+
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds
+    ],
+    partials: [
+        Partials.Channel
+    ]
+});
+
+// =====================================
+// SLASH COMMAND
+// =====================================
+
+const commands = [
+    new SlashCommandBuilder()
+        .setName("setup")
+        .setDescription("إرسال نظام القوانين والتذاكر")
+        .setDefaultMemberPermissions(
+            PermissionsBitField.Flags.Administrator
+        )
+        .toJSON()
+];
+
+const rest = new REST({
+    version: "10"
+}).setToken(TOKEN);
+
+// =====================================
+// BOT READY
+// =====================================
+
+client.once("ready", async () => {
+
+    console.log("=================================");
+    console.log(`✅ ${BOT_NAME} IS ONLINE`);
+    console.log(`🤖 ${client.user.tag}`);
+    console.log("=================================");
+
+    client.user.setPresence({
+        activities: [
+            {
+                name: "BARAKAT COMMUNITY",
+                type: 3
+            }
+        ],
+        status: "online"
+    });
+
+    try {
+
+        await rest.put(
+            Routes.applicationGuildCommands(
+                CLIENT_ID,
+                GUILD_ID
+            ),
+            {
+                body: commands
+            }
+        );
+
+        console.log("✅ /setup registered successfully");
+
+    } catch (error) {
+
+        console.error(
+            "❌ Slash command error:",
+            error
+        );
+
+    }
+
+});
+
+// =====================================
+// /SETUP COMMAND
+// =====================================
+
+client.on(
+    "interactionCreate",
+    async (interaction) => {
+
+        if (!interaction.isChatInputCommand()) {
+            return;
+        }
+
+        if (interaction.commandName !== "setup") {
+            return;
+        }
+
+        if (
+            !interaction.memberPermissions.has(
+                PermissionsBitField.Flags.Administrator
+            )
+        ) {
+
+            return interaction.reply({
+                content:
+                    "❌ هذا الأمر للإدارة فقط.",
+                ephemeral: true
+            });
+
+        }
+
+        await interaction.deferReply({
+            ephemeral: true
+        });
+
+        try {
+
+            // =================================
+            // RULES CHANNEL
+            // =================================
+
+            const rulesChannel =
+                await interaction.guild.channels.fetch(
+                    RULES_CHANNEL_ID
+                );
+
+            if (rulesChannel) {
+
+                const rulesEmbed =
+                    new EmbedBuilder()
+                        .setColor(0xF5A623)
+                        .setTitle(
+                            "📜 قوانين BARAKAT COMMUNITY"
+                        )
+                        .setDescription(
+`# أهلاً وسهلاً بك في BARAKAT COMMUNITY ❤️
+
+نتمنى لك وقتًا ممتعًا معنا، ونرجو منك الالتزام بالقوانين واحترام جميع أعضاء المجتمع.
+
+**1・الاحترام**
+
+احترم جميع الأعضاء والإدارة، ويمنع التنمر أو الإساءة بأي شكل.
+
+**2・ممنوع السب والإهانات**
+
+يمنع استخدام الألفاظ المسيئة أو العنصرية أو أي كلام غير لائق.
+
+**3・ممنوع السبام**
+
+يمنع تكرار الرسائل أو المنشنات بشكل مزعج.
+
+**4・ممنوع الإعلانات**
+
+يمنع نشر الإعلانات أو روابط السيرفرات الأخرى بدون إذن الإدارة.
+
+**5・استخدم كل روم في مكانه**
+
+يرجى استخدام كل قناة للغرض المخصص لها.
+
+**6・المحتوى غير المناسب**
+
+يمنع نشر أي محتوى مخالف أو غير مناسب داخل السيرفر.
+
+**7・انتحال الشخصية**
+
+يمنع انتحال شخصية أي عضو أو إداري.
+
+**8・الخصوصية**
+
+يمنع نشر المعلومات الشخصية عن أي شخص بدون موافقته.
+
+**9・الروابط والملفات**
+
+يمنع نشر الروابط أو الملفات الضارة أو محاولات الاحتيال.
+
+**10・قرارات الإدارة**
+
+يجب احترام قرارات الإدارة، وفي حالة وجود اعتراض يمكنك فتح تذكرة دعم.
+
+**11・الشكاوى**
+
+أي مشكلة أو شكوى يتم تقديمها من خلال نظام التذاكر.
+
+━━━━━━━━━━━━━━━━━━━━
+
+# ❤️ استمتع يا مظبوط
+
+**BARAKAT COMMUNITY**`
+                        )
+                        .setFooter({
+                            text:
+                                "BARAKAT COMMUNITY • Rules"
+                        });
+
+                const rulesOptions = {
+                    embeds: [
+                        rulesEmbed
+                    ]
+                };
+
+                if (
+                    fs.existsSync(
+                        rulesImagePath
+                    )
+                ) {
+
+                    const attachment =
+                        new AttachmentBuilder(
+                            rulesImagePath,
+                            {
+                                name: "rules.png"
+                            }
+                        );
+
+                    rulesEmbed.setImage(
+                        "attachment://rules.png"
+                    );
+
+                    rulesOptions.files = [
+                        attachment
+                    ];
+
+                }
+
+                await rulesChannel.send(
+                    rulesOptions
+                );
+
+            }
+
+            // =================================
+            // TICKET PANEL
+            // =================================
+
+            const ticketChannel =
+                await interaction.guild.channels.fetch(
+                    TICKET_CHANNEL_ID
+                );
+
+            if (ticketChannel) {
+
+                const ticketEmbed =
+                    new EmbedBuilder()
+                        .setColor(0xE74C3C)
+                        .setTitle(
+                            "🎫 BARAKAT COMMUNITY | الدعم الفني"
+                        )
+                        .setDescription(
+`# نظام الدعم الفني
+
+أهلاً بك في نظام التذاكر الخاص بـ **BARAKAT COMMUNITY**.
+
+**اختر نوع التذكرة المناسب لك من القائمة الموجودة بالأسفل.**
+
+**🛠️ الدعم الفني**
+
+للمشاكل التقنية والاستفسارات العامة.
+
+**⚖️ الشكاوى والعقوبات**
+
+للاستفسار أو الاعتراض على Ban أو أي عقوبة أو إجراء إداري.
+
+**🎥 Stream Support**
+
+لأي مشكلة أو استفسار متعلق بالستريم، مثل العقوبات أو الـBan أو أي مشكلة حدثت أثناء البث.
+
+**🎬 Editor Application**
+
+للتقديم على Editor والمساعدة في صناعة الفيديوهات والتصاميم والمحتوى الخاص بالسيرفر.
+
+━━━━━━━━━━━━━━━━━━━━
+
+⚠️ يرجى اختيار القسم المناسب لمشكلتك.
+
+❌ يمنع فتح تذاكر بدون سبب أو إزعاج الإدارة.`
+                        )
+                        .setFooter({
+                            text:
+                                "BARAKAT COMMUNITY • Support System"
+                        });
+
+                const menu =
+                    new StringSelectMenuBuilder()
+                        .setCustomId(
+                            "ticket_select"
+                        )
+                        .setPlaceholder(
+                            "🎫 اختر نوع التذكرة"
+                        )
+                        .addOptions([
+
+                            {
+                                label:
+                                    "الدعم الفني",
+
+                                description:
+                                    "للمشاكل التقنية والاستفسارات",
+
+                                value:
+                                    "technical",
+
+                                emoji:
+                                    "🛠️"
+                            },
+
+                            {
+                                label:
+                                    "الشكاوى والعقوبات",
+
+                                description:
+                                    "للاعتراض على Ban أو عقوبة",
+
+                                value:
+                                    "punishment",
+
+                                emoji:
+                                    "⚖️"
+                            },
+
+                            {
+                                label:
+                                    "Stream Support",
+
+                                description:
+                                    "مشاكل واستفسارات الستريم",
+
+                                value:
+                                    "stream",
+
+                                emoji:
+                                    "🎥"
+                            },
+
+                            {
+                                label:
+                                    "Editor Application",
+
+                                description:
+                                    "التقديم على Editor",
+
+                                value:
+                                    "editor",
+
+                                emoji:
+                                    "🎬"
+                            }
+
+                        ]);
+
+                const row =
+                    new ActionRowBuilder()
+                        .addComponents(menu);
+
+                const ticketOptions = {
+                    embeds: [
+                        ticketEmbed
+                    ],
+
+                    components: [
+                        row
+                    ]
+                };
+
+                if (
+                    fs.existsSync(
+                        ticketImagePath
+                    )
+                ) {
+
+                    const attachment =
+                        new AttachmentBuilder(
+                            ticketImagePath,
+                            {
+                                name: "ticket.png"
+                            }
+                        );
+
+                    ticketEmbed.setImage(
+                        "attachment://ticket.png"
+                    );
+
+                    ticketOptions.files = [
+                        attachment
+                    ];
+
+                }
+
+                await ticketChannel.send(
+                    ticketOptions
+                );
+
+            }
+
+            await interaction.editReply({
+                content:
+                    "✅ تم إرسال نظام القوانين والتذاكر بنجاح."
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            await interaction.editReply({
+                content:
+                    "❌ حصل خطأ. تأكد من الـIDs وصلاحيات البوت."
+            });
+
+        }
+
+    }
+);
+
+// =====================================
+// TICKET SELECT MENU
+// =====================================
+
+client.on(
+    "interactionCreate",
+    async (interaction) => {
+
+        if (
+            !interaction.isStringSelectMenu()
+        ) {
+            return;
+        }
+
+        if (
+            interaction.customId !==
+            "ticket_select"
+        ) {
+            return;
+        }
+
+        const guild =
+            interaction.guild;
+
+        const member =
+            interaction.member;
+
+        const type =
+            interaction.values[0];
+
+        // =================================
+        // CHECK EXISTING TICKET
+        // =================================
+
+        const existingTicket =
+            guild.channels.cache.find(
+                channel =>
+
+                    channel.type ===
+                    ChannelType.GuildText &&
+
+                    channel.topic ===
+                    `barakat-ticket:${member.id}`
+            );
+
+        if (existingTicket) {
+
+            return interaction.reply({
+
+                content:
+                    `❌ عندك تذكرة مفتوحة بالفعل: ${existingTicket}`,
+
+                ephemeral: true
+
+            });
+
+        }
+
+        // =================================
+        // TICKET NAMES
+        // =================================
+
+        const ticketNames = {
+
+            technical:
+                "دعم-فني",
+
+            punishment:
+                "شكوى-عقوبة",
+
+            stream:
+                "stream-support",
+
+            editor:
+                "editor-application"
+
+        };
+
+        // =================================
+        // TICKET TITLES
+        // =================================
+
+        const titles = {
+
+            technical:
+                "🛠️ الدعم الفني",
+
+            punishment:
+                "⚖️ شكوى / عقوبة",
+
+            stream:
+                "🎥 Stream Support",
+
+            editor:
+                "🎬 Editor Application"
+
+        };
+
+        // =================================
+        // TICKET DESCRIPTIONS
+        // =================================
+
+        const descriptions = {
+
+            technical:
+                "اكتب المشكلة التي تواجهها بالتفصيل، وسيقوم فريق الدعم بمساعدتك.",
+
+            punishment:
+                "اكتب تفاصيل العقوبة أو الـBan وسبب اعتراضك عليها، وسيقوم فريق الإدارة بمراجعة طلبك.",
+
+            stream:
+                "اكتب المشكلة أو العقوبة التي حدثت لك أثناء الستريم بالتفصيل.",
+
+            editor:
+                "أهلاً بك في تقديم الـEditor.\n\nيرجى إرسال معلوماتك وأعمالك السابقة وروابط الفيديوهات أو التصاميم الخاصة بك."
+
+        };
+
+        // =================================
+        // PERMISSIONS
+        // =================================
+
+        const permissionOverwrites = [
+
+            {
+                id:
+                    guild.roles.everyone.id,
+
+                deny: [
+                    PermissionsBitField.Flags
+                        .ViewChannel
+                ]
+            },
+
+            {
+                id:
+                    member.id,
+
+                allow: [
+
+                    PermissionsBitField.Flags
+                        .ViewChannel,
+
+                    PermissionsBitField.Flags
+                        .SendMessages,
+
+                    PermissionsBitField.Flags
+                        .ReadMessageHistory,
+
+                    PermissionsBitField.Flags
+                        .AttachFiles
+
+                ]
+
+            },
+
+            {
+                id:
+                    STAFF_ROLE_ID,
+
+                allow: [
+
+                    PermissionsBitField.Flags
+                        .ViewChannel,
+
+                    PermissionsBitField.Flags
+                        .SendMessages,
+
+                    PermissionsBitField.Flags
+                        .ReadMessageHistory,
+
+                    PermissionsBitField.Flags
+                        .ManageMessages
+
+                ]
+
+            }
+
+        ];
+
+        // =================================
+        // CREATE TICKET
+        // =================================
+
+        const ticketChannel =
+            await guild.channels.create({
+
+                name:
+                    `${ticketNames[type]}-${member.user.username}`
+                        .slice(0, 100),
+
+                type:
+                    ChannelType.GuildText,
+
+                topic:
+                    `barakat-ticket:${member.id}`,
+
+                parent:
+                    TICKET_CATEGORY_ID,
+
+                permissionOverwrites
+
+            });
+
+        // =================================
+        // TICKET EMBED
+        // =================================
+
+        const ticketEmbed =
+            new EmbedBuilder()
+
+                .setColor(0xF5A623)
+
+                .setTitle(
+                    titles[type]
+                )
+
+                .setDescription(
+`${descriptions[type]}
+
+━━━━━━━━━━━━━━━━━━━━
+
+👤 صاحب التذكرة: ${member}
+
+📝 يرجى شرح طلبك بالتفصيل.
+
+**BARAKAT COMMUNITY**`
+                )
+
+                .setFooter({
+
+                    text:
+                        "BARAKAT COMMUNITY • Support"
+
+                });
+
+        // =================================
+        // CLOSE BUTTON
+        // =================================
+
+        const closeButton =
+            new ButtonBuilder()
+
+                .setCustomId(
+                    "close_ticket"
+                )
+
+                .setLabel(
+                    "إغلاق التذكرة"
+                )
+
+                .setEmoji(
+                    "🔒"
+                )
+
+                .setStyle(
+                    ButtonStyle.Danger
+                );
+
+        const row =
+            new ActionRowBuilder()
+                .addComponents(
+                    closeButton
+                );
+
+        await ticketChannel.send({
+
+            content:
+                `${member} <@&${STAFF_ROLE_ID}>`,
+
+            embeds: [
+                ticketEmbed
+            ],
+
+            components: [
+                row
+            ]
+
+        });
+
+        await interaction.reply({
+
+            content:
+                `✅ تم إنشاء تذكرتك: ${ticketChannel}`,
+
+            ephemeral: true
+
+        });
+
+    }
+);
+
+// =====================================
+// CLOSE TICKET
+// =====================================
+
+client.on(
+    "interactionCreate",
+    async (interaction) => {
+
+        if (!interaction.isButton()) {
+            return;
+        }
+
+        if (
+            interaction.customId !==
+            "close_ticket"
+        ) {
+            return;
+        }
+
+        const member =
+            interaction.member;
+
+        const isStaff =
+
+            member.roles.cache.has(
+                STAFF_ROLE_ID
+            )
+
+            ||
+
+            member.permissions.has(
+                PermissionsBitField.Flags
+                    .Administrator
+            );
+
+        if (!isStaff) {
+
+            return interaction.reply({
+
+                content:
+                    "❌ إغلاق التذكرة متاح للإدارة فقط.",
+
+                ephemeral: true
+
+            });
+
+        }
+
+        await interaction.reply({
+
+            content:
+                "🔒 سيتم إغلاق التذكرة خلال 5 ثواني..."
+
+        });
+
+        setTimeout(
+            async () => {
+
+                try {
+
+                    await interaction.channel.delete();
+
+                } catch (error) {
+
+                    console.error(error);
+
+                }
+
+            },
+            5000
+        );
+
+    }
+);
+
+// =====================================
+// CHECK ENVIRONMENT VARIABLES
+// =====================================
+
+if (
+    !TOKEN ||
+    !CLIENT_ID ||
+    !GUILD_ID
+) {
+
+    console.error(
+        "❌ Missing DISCORD_TOKEN, CLIENT_ID or GUILD_ID."
+    );
+
+    process.exit(1);
+
+}
+
+// =====================================
+// LOGIN
+// =====================================
+
+client.login(TOKEN);
